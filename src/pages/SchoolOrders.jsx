@@ -20,10 +20,39 @@ export default function SchoolOrders() {
   const [deliveries, setDeliveries] = useState([])
 
   const [orderType, setOrderType] = useState('set')
-  const [form, setForm] = useState({ schoolId: '', setId: '', notes: '', students: '' })
+  const [form, setForm] = useState({ schoolId: '', notes: '' })
+  const [setSets, setSetsState] = useState([{ setId: '', quantity: '' }])
   const [manualItems, setManualItems] = useState([{ bookId: '', qtyOrdered: '', unitPrice: '' }])
+  const [selectedSetForItems, setSelectedSetForItems] = useState('')
+  const [setBasedItems, setSetBasedItems] = useState([])
 
-  const openCreate = () => { setForm({ schoolId: '', setId: '', notes: '', students: '' }); setManualItems([{ bookId: '', qtyOrdered: '', unitPrice: '' }]); setOrderType('set'); setModal(true) }
+  const addSetRow = () => setSetsState(p => [...p, { setId: '', quantity: '' }])
+  const removeSetRow = (i) => setSetsState(p => p.filter((_, idx) => idx !== i))
+  const updateSetRow = (i, k, v) => setSetsState(p => p.map((r, idx) => idx === i ? { ...r, [k]: v } : r))
+
+  const handleSetForItemsSelect = (setId) => {
+    setSelectedSetForItems(setId)
+    if (!setId) { setSetBasedItems([]); return }
+    const chosen = setList.find(s => s.id === parseInt(setId))
+    if (chosen) {
+      setSetBasedItems(chosen.items.map(si => ({
+        bookId: String(si.bookId),
+        bookTitle: si.book?.title || '',
+        qtyOrdered: String(si.quantity),
+        unitPrice: String(si.book?.mrp || ''),
+      })))
+    }
+  }
+
+  const openCreate = () => {
+    setForm({ schoolId: '', notes: '' })
+    setSetsState([{ setId: '', quantity: '' }])
+    setManualItems([{ bookId: '', qtyOrdered: '', unitPrice: '' }])
+    setSelectedSetForItems('')
+    setSetBasedItems([])
+    setOrderType('set')
+    setModal(true)
+  }
 
   const openDeliver = (r) => {
     setDeliverModal(r)
@@ -36,7 +65,9 @@ export default function SchoolOrders() {
     e.preventDefault()
     try {
       const payload = orderType === 'set'
-        ? { schoolId: form.schoolId, setId: form.setId, notes: form.notes, students: form.students, items: [] }
+        ? { schoolId: form.schoolId, sets: setSets, notes: form.notes, items: [] }
+        : orderType === 'setItems'
+        ? { schoolId: form.schoolId, notes: form.notes, items: setBasedItems.map(i => ({ bookId: i.bookId, qtyOrdered: i.qtyOrdered, unitPrice: i.unitPrice })) }
         : { schoolId: form.schoolId, notes: form.notes, items: manualItems }
       await api.create(payload)
       setModal(false); reload(); toast.success('Order created')
@@ -103,45 +134,90 @@ export default function SchoolOrders() {
       {modal && (
         <Modal title="New School Order" onClose={() => setModal(false)} wide>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="flex gap-4 text-sm mb-2">
+            <div className="flex flex-wrap gap-4 text-sm mb-2">
               <label className="flex items-center gap-1.5 cursor-pointer"><input type="radio" checked={orderType === 'set'} onChange={() => setOrderType('set')} /> From Book Set</label>
+              <label className="flex items-center gap-1.5 cursor-pointer"><input type="radio" checked={orderType === 'setItems'} onChange={() => setOrderType('setItems')} /> Book Set (Custom Qty)</label>
               <label className="flex items-center gap-1.5 cursor-pointer"><input type="radio" checked={orderType === 'manual'} onChange={() => setOrderType('manual')} /> Manual Items</label>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">School *</label>
+              <select required value={form.schoolId} onChange={e => setForm(f => ({ ...f, schoolId: e.target.value }))} className="select">
+                <option value="">Select school</option>
+                {schoolList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+            {orderType === 'set' && (
               <div>
-                <label className="label">School *</label>
-                <select required value={form.schoolId} onChange={e => setForm(f => ({ ...f, schoolId: e.target.value }))} className="select">
-                  <option value="">Select school</option>
-                  {schoolList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-medium text-slate-600">Book Sets *</label>
+                  <button type="button" onClick={addSetRow} className="text-blue-600 text-xs hover:underline">+ Add Set</button>
+                </div>
+                <div className="space-y-2">
+                  {setSets.map((row, i) => (
+                    <div key={i} className="grid grid-cols-[1fr_130px_auto] gap-2 items-center">
+                      <select required value={row.setId} onChange={e => updateSetRow(i, 'setId', e.target.value)} className="select">
+                        <option value="">Select set</option>
+                        {setList.map(s => <option key={s.id} value={s.id}>{s.name} — {s.className} ({s.school?.name})</option>)}
+                      </select>
+                      <input
+                        required type="number" min="1"
+                        placeholder="No. of Sets"
+                        value={row.quantity}
+                        onChange={e => updateSetRow(i, 'quantity', e.target.value)}
+                        className="input"
+                      />
+                      {setSets.length > 1 && (
+                        <button type="button" onClick={() => removeSetRow(i)} className="text-red-400 text-lg leading-none px-1">&times;</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">Each book in the set is multiplied by the no. of sets entered.</p>
               </div>
-              {orderType === 'set' && (
-                <div>
-                  <label className="label">Book Set *</label>
-                  <select required value={form.setId} onChange={e => setForm(f => ({ ...f, setId: e.target.value }))} className="select">
-                    <option value="">Select set</option>
+            )}
+            {orderType === 'setItems' && (
+              <div>
+                <div className="mb-2">
+                  <label className="text-xs font-medium text-slate-600">Book Set *</label>
+                  <select
+                    required
+                    value={selectedSetForItems}
+                    onChange={e => handleSetForItemsSelect(e.target.value)}
+                    className="select mt-1"
+                  >
+                    <option value="">Select a book set</option>
                     {setList.map(s => <option key={s.id} value={s.id}>{s.name} — {s.className} ({s.school?.name})</option>)}
                   </select>
                 </div>
-              )}
-              {orderType === 'set' && (
-                <div>
-                  <label className="label">No. of Students *</label>
-                  <input
-                    required type="number" min="1"
-                    placeholder="e.g. 30"
-                    value={form.students}
-                    onChange={e => setForm(f => ({ ...f, students: e.target.value }))}
-                    className="input"
-                  />
-                  {form.students > 0 && form.setId && (
-                    <p className="text-[11px] text-slate-400 mt-1">
-                      Each book in the set will be ordered × {form.students}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
+                {setBasedItems.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-medium text-slate-600">Items — set quantities as needed</label>
+                    </div>
+                    <div className="space-y-2">
+                      {setBasedItems.map((item, i) => (
+                        <div key={i} className="grid grid-cols-[1fr_100px_100px] gap-2 items-center">
+                          <span className="text-sm text-slate-700 truncate">{item.bookTitle}</span>
+                          <input
+                            required type="number" min="0" placeholder="Qty"
+                            value={item.qtyOrdered}
+                            onChange={e => setSetBasedItems(p => p.map((it, idx) => idx === i ? { ...it, qtyOrdered: e.target.value } : it))}
+                            className="border border-gray-300 rounded px-2 py-1.5 text-sm"
+                          />
+                          <input
+                            required type="number" step="0.01" placeholder="Price"
+                            value={item.unitPrice}
+                            onChange={e => setSetBasedItems(p => p.map((it, idx) => idx === i ? { ...it, unitPrice: e.target.value } : it))}
+                            className="border border-gray-300 rounded px-2 py-1.5 text-sm"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-1">Quantities pre-filled from the set — edit any row before submitting.</p>
+                  </div>
+                )}
+              </div>
+            )}
             <div>
               <label className="label">Notes</label>
               <input value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} className="select" />
