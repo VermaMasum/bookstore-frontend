@@ -2,7 +2,7 @@ import { toast } from 'react-toastify'
 import { useState } from 'react'
 import useFetch from '../hooks/useFetch'
 import useTableState from '../hooks/useTableState'
-import { purchaseOrders as api, suppliers, books } from '../api'
+import { purchaseOrders as api, companies, books } from '../api'
 import Modal from '../components/ui/Modal'
 import Pagination from '../components/ui/Pagination'
 import Badge from '../components/ui/Badge'
@@ -11,21 +11,21 @@ import useConfirm from '../hooks/useConfirm'
 
 export default function PurchaseOrders() {
   const { data, loading, reload } = useFetch(api.getAll)
-  const { data: supplierList } = useFetch(suppliers.getAll)
+  const { data: companyList } = useFetch(companies.getAll)
   const { data: bookList } = useFetch(books.getAll)
 
   const { paginated, filtered, search, setSearch, filter, setFilter, page, setPage } = useTableState(data, {
-    searchFields: ['supplier.name', 'notes'], filterField: 'status', perPage: 10,
+    searchFields: ['company.name', 'notes'], filterField: 'status', perPage: 10,
   })
 
   const { confirm, confirmModal } = useConfirm()
 
   const [modal, setModal] = useState(false)
   const [viewModal, setViewModal] = useState(null)
-  const [form, setForm] = useState({ supplierId: '', notes: '' })
+  const [form, setForm] = useState({ companyId: '', notes: '' })
   const [bookItems, setBookItems] = useState({})
 
-  const openCreate = () => { setForm({ supplierId: '', notes: '' }); setBookItems({}); setModal(true) }
+  const openCreate = () => { setForm({ companyId: '', notes: '' }); setBookItems({}); setModal(true) }
 
   const handleBookChange = (bookId, field, value) => {
     setBookItems(prev => ({ ...prev, [bookId]: { ...prev[bookId], bookId, [field]: value } }))
@@ -64,14 +64,14 @@ export default function PurchaseOrders() {
       <div className="flex flex-wrap items-start sm:items-center justify-between gap-3 mb-5">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Purchase Orders</h1>
-          <p className="text-xs text-slate-400 mt-0.5">B2B Inward  buy stock from suppliers</p>
+          <p className="text-xs text-slate-400 mt-0.5">B2B Inward  buy stock from companys</p>
         </div>
         <button onClick={openCreate} className="btn-primary">+ New Order</button>
       </div>
 
       <div className="table-wrap">
         <div className="filter-bar">
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by supplier" className="input flex-1 min-w-48" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by company" className="input flex-1 min-w-48" />
           <select value={filter} onChange={e => setFilter(e.target.value)} className="select w-40">
             <option value="ALL">All Status</option>
             {['PENDING', 'RECEIVED', 'PARTIAL', 'CANCELLED'].map(s => <option key={s} value={s}>{s}</option>)}
@@ -87,7 +87,7 @@ export default function PurchaseOrders() {
                 : paginated.map(r => (
                   <tr key={r.id} className="table-row">
                     <td className="px-4 py-3.5 text-slate-400 text-xs font-mono">#{r.id}</td>
-                    <td className="px-4 py-3.5 font-semibold text-slate-800">{r.supplier?.name}</td>
+                    <td className="px-4 py-3.5 font-semibold text-slate-800">{r.company?.name}</td>
                     <td className="px-4 py-3.5 text-slate-500">{new Date(r.orderDate).toLocaleDateString()}</td>
                     <td className="px-4 py-3.5 text-slate-500">{r.items?.length} title(s)</td>
                     <td className="px-4 py-3.5 font-semibold text-slate-800">{totalFor(r).toLocaleString()}</td>
@@ -114,10 +114,10 @@ export default function PurchaseOrders() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="label">Supplier *</label>
-                <select required value={form.supplierId} onChange={e => setForm(f => ({ ...f, supplierId: e.target.value }))} className="select">
-                  <option value="">Select supplier</option>
-                  {supplierList.map(s => <option key={s.id} value={s.id}>{s.name} ({s.type})</option>)}
+                <label className="label">Company *</label>
+                <select required value={form.companyId} onChange={e => setForm(f => ({ ...f, companyId: e.target.value }))} className="select">
+                  <option value="">Select company</option>
+                  {companyList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
               <div>
@@ -150,7 +150,7 @@ export default function PurchaseOrders() {
         <Modal title={`Purchase Order #${viewModal.id}`} onClose={() => setViewModal(null)} wide>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2 text-sm p-3 bg-slate-50 rounded">
-              <div><span className="text-slate-500">Supplier:</span> <strong>{viewModal.supplier?.name}</strong></div>
+              <div><span className="text-slate-500">Supplier:</span> <strong>{viewModal.company?.name}</strong></div>
               <div><span className="text-slate-500">Status:</span> <Badge value={viewModal.status} /></div>
               <div><span className="text-slate-500">Date:</span> {new Date(viewModal.orderDate).toLocaleDateString()}</div>
               {viewModal.notes && <div><span className="text-slate-500">Notes:</span> {viewModal.notes}</div>}

@@ -52,7 +52,7 @@ export default function BookPickerTable({ books = [], items = [], onChange, colu
               {checkboxMode && <th className="px-3 py-2 text-xs font-medium text-gray-500 text-center w-10"></th>}
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Book</th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Publisher</th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">MRP</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Cost Price</th>
               <th className="px-3 py-2 text-xs font-medium text-gray-500 text-center">Qty</th>
               {columns.map(c => (
                 <th key={c.key} className="px-3 py-2 text-xs font-medium text-gray-500">{c.label}</th>
@@ -87,7 +87,7 @@ export default function BookPickerTable({ books = [], items = [], onChange, colu
                     {b.inventory && <p className="text-xs text-gray-400">Stock: {b.inventory.quantity}</p>}
                   </td>
                   <td className="px-3 py-2 text-gray-500 text-xs">{b.publisher?.name || '—'}</td>
-                  <td className="px-3 py-2 text-gray-700">₹{b.mrp}</td>
+                  <td className="px-3 py-2 text-gray-700">₹{b.costPrice}</td>
                   <td className="px-3 py-2 text-center" onClick={e => e.stopPropagation()}>
                     {checkboxMode ? (
                       active ? (

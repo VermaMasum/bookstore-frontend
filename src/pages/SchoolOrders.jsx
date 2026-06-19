@@ -1,10 +1,11 @@
 import { toast } from 'react-toastify'
 import { useState } from 'react'
 import useFetch from '../hooks/useFetch'
-import { schoolOrders as api, schools, bookSets, books } from '../api'
+import { schoolOrders as api, schools, bookSets, books, invoices as invoiceApi } from '../api'
 import Modal from '../components/ui/Modal'
 import Badge from '../components/ui/Badge'
 import useConfirm from '../hooks/useConfirm'
+import InvoicePrint from '../components/InvoicePrint'
 
 export default function SchoolOrders() {
   const { data, loading, reload } = useFetch(api.getAll)
@@ -17,6 +18,11 @@ export default function SchoolOrders() {
   const [modal, setModal] = useState(false)
   const [viewModal, setViewModal] = useState(null)
   const [deliverModal, setDeliverModal] = useState(null)
+  const [printInvoiceId, setPrintInvoiceId] = useState(null)
+  const [invoiceModal, setInvoiceModal] = useState(null)
+  const [discountPct, setDiscountPct] = useState('0')
+  const [gstRate, setGstRate] = useState('0')
+  const [buyerAddress, setBuyerAddress] = useState('')
   const [deliveries, setDeliveries] = useState([])
 
   const [orderType, setOrderType] = useState('set')
@@ -88,6 +94,24 @@ export default function SchoolOrders() {
     try { await api.cancel(id); reload(); toast.success('Order cancelled') } catch (err) { toast.error(err.response?.data?.message || 'Error') }
   }
 
+  const handleGenerateInvoice = (r) => {
+    if (r.invoice) { setPrintInvoiceId(r.invoice.id); return }
+    setDiscountPct('0'); setGstRate('0')
+    setBuyerAddress(r.school?.address || '')
+    setInvoiceModal(r)
+  }
+
+  const confirmGenerateInvoice = async () => {
+    if (!invoiceModal) return
+    try {
+      const res = await invoiceApi.generate({ orderType: 'B2C', orderId: invoiceModal.id, discountPct: parseFloat(discountPct || 0), gstRate: parseFloat(gstRate || 0), supplyType: 'INTRA', buyerAddressOverride: buyerAddress })
+      toast.success(`Invoice ${res.data.data.invoiceNumber} generated`)
+      setInvoiceModal(null)
+      reload()
+      setPrintInvoiceId(res.data.data.id)
+    } catch (err) { toast.error(err.response?.data?.message || 'Error generating invoice') }
+  }
+
   const totalFor = (o) => o.items?.reduce((s, i) => s + parseFloat(i.unitPrice) * i.qtyOrdered, 0) || 0
   const paidFor = (o) => o.payments?.reduce((s, p) => s + parseFloat(p.amount), 0) || 0
 
@@ -123,6 +147,11 @@ export default function SchoolOrders() {
                   <button onClick={() => setViewModal(r)} className="act-view">View</button>
                   {['PENDING','PARTIAL'].includes(r.status) && <button onClick={() => openDeliver(r)} className="act-success">Deliver</button>}
                   {r.status === 'PENDING' && <button onClick={() => handleCancel(r.id)} className="act-danger">Cancel</button>}
+                  {r.status !== 'CANCELLED' && (
+                    <button onClick={() => handleGenerateInvoice(r)} className={r.invoice ? 'act-view' : 'act-blue'} title={r.invoice ? `Invoice: ${r.invoice.invoiceNumber}` : 'Generate Invoice'}>
+                      {r.invoice ? 'Invoice' : '+ Invoice'}
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
@@ -131,6 +160,54 @@ export default function SchoolOrders() {
       </div>
 
       {confirmModal}
+      {printInvoiceId && <InvoicePrint invoiceId={printInvoiceId} onClose={() => setPrintInvoiceId(null)} />}
+
+      {invoiceModal && (
+        <Modal title={`Generate Invoice — Order #${invoiceModal.id}`} onClose={() => setInvoiceModal(null)}>
+          <div className="space-y-4">
+            <div className="p-3 bg-slate-50 rounded text-sm text-slate-600">
+              <strong>{invoiceModal.school?.name}</strong> &bull; {invoiceModal.items?.length} book(s) &bull; Total: ₹{totalFor(invoiceModal).toLocaleString()}
+            </div>
+            <div>
+              <label className="label">Buyer Address <span className="text-slate-400 font-normal">(shown on invoice — edit if needed)</span></label>
+              <textarea
+                value={buyerAddress}
+                onChange={e => setBuyerAddress(e.target.value)}
+                rows={2}
+                className="input w-full resize-none"
+                placeholder="Street, City, State - PIN"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="label">Discount %</label>
+                <input type="number" min="0" max="100" step="0.5"
+                  value={discountPct} onChange={e => setDiscountPct(e.target.value)}
+                  className="input" placeholder="0" />
+              </div>
+              <div>
+                <label className="label">GST Rate %</label>
+                <select value={gstRate} onChange={e => setGstRate(e.target.value)} className="select">
+                  <option value="0">0% (Exempt)</option>
+                  <option value="5">5%</option>
+                  <option value="12">12%</option>
+                  <option value="18">18%</option>
+                  <option value="28">28%</option>
+                </select>
+              </div>
+            </div>
+            {parseFloat(gstRate) > 0 && (
+              <p className="text-[11px] text-indigo-500">GST will be split as CGST {parseFloat(gstRate)/2}% + SGST {parseFloat(gstRate)/2}%</p>
+            )}
+            <p className="text-[11px] text-slate-400">Invoice number will be auto-assigned.</p>
+            <div className="modal-footer">
+              <button onClick={() => setInvoiceModal(null)} className="btn-white">Cancel</button>
+              <button onClick={confirmGenerateInvoice} className="btn-primary">Generate &amp; View Invoice</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {modal && (
         <Modal title="New School Order" onClose={() => setModal(false)} wide>
           <form onSubmit={handleSubmit} className="space-y-4">

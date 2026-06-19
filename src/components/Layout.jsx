@@ -30,18 +30,17 @@ const mainNav = [
 ]
 
 const setupNav = [
-  { label: 'Publishers', path: '/publishers', icon: Icon.bldg },
-  { label: 'Suppliers',  path: '/suppliers',  icon: Icon.truck },
-  { label: 'Vendors',    path: '/vendors',    icon: Icon.store },
-  { label: 'Schools',    path: '/schools',    icon: Icon.cap },
-  { label: 'Books',      path: '/books',      icon: Icon.book },
-  { label: 'Book Sets',  path: '/book-sets',  icon: Icon.layers },
+  { label: 'Publishers',    path: '/publishers',    icon: Icon.bldg },
+  { label: 'Companies',     path: '/companies',     icon: Icon.truck },
+  { label: 'Schools',       path: '/schools',       icon: Icon.cap },
+  { label: 'Books',         path: '/books',         icon: Icon.book },
+  { label: 'Book Sets',     path: '/book-sets',     icon: Icon.layers },
+  { label: 'Shop Settings', path: '/shop-settings', icon: Icon.eod },
 ]
 
 const setupFlow = [
   { path: '/publishers', label: 'Publishers' },
-  { path: '/suppliers',  label: 'Suppliers' },
-  { path: '/vendors',    label: 'Vendors' },
+  { path: '/companies',  label: 'Companies' },
   { path: '/schools',    label: 'Schools' },
   { path: '/books',      label: 'Books' },
   { path: '/book-sets',  label: 'Book Sets' },
@@ -49,11 +48,12 @@ const setupFlow = [
 
 const titles = {
   '/': 'Dashboard', '/books': 'Books', '/publishers': 'Publishers',
-  '/suppliers': 'Suppliers', '/vendors': 'Vendors', '/schools': 'Schools',
+  '/companies': 'Companies', '/schools': 'Schools',
   '/inventory': 'Inventory', '/purchase-orders': 'Buy Stock',
   '/vendor-orders': 'Vendor Sales', '/book-sets': 'Book Sets',
   '/school-orders': 'School Sales', '/payments': 'Payments',
   '/reconciliation': 'End of Day',
+  '/shop-settings': 'Shop Settings',
 }
 
 const subtitles = {
@@ -67,9 +67,9 @@ const subtitles = {
   '/reconciliation': 'End-of-day summary',
   '/book-sets': 'Group books by school',
   '/publishers': 'Publisher master data',
-  '/suppliers': 'Supplier master data',
-  '/vendors': 'Vendor master data',
+  '/companies': 'Suppliers & vendors',
   '/schools': 'School master data',
+  '/shop-settings': 'GSTIN, bank details & invoice info',
 }
 
 export default function Layout() {

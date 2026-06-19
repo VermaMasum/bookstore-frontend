@@ -27,16 +27,19 @@ const main = [
   { label: 'School Sales', path: '/school-orders',   icon: I.cart,  hint: 'Sell to schools' },
   { label: 'Inventory',    path: '/inventory',       icon: I.box,   hint: 'Stock levels' },
   { label: 'Payments',     path: '/payments',        icon: I.card,  hint: 'Record payments' },
+  { label: 'Invoices',     path: '/invoices',        icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>, hint: 'Tax invoices' },
+  { label: 'EOD Upload',   path: '/eod-upload',      icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>, hint: 'Retail daily sheet' },
   { label: 'End of Day',   path: '/reconciliation',  icon: I.cal,   hint: 'Daily summary' },
 ]
 
 const setup = [
-  { label: 'Publishers', path: '/publishers', icon: I.bldg,   hint: 'Add before books' },
-  { label: 'Suppliers',  path: '/suppliers',  icon: I.truck,  hint: 'Who you buy from' },
-  { label: 'Vendors',    path: '/vendors',    icon: I.store,  hint: 'Wholesale buyers' },
-  { label: 'Schools',    path: '/schools',    icon: I.cap,    hint: 'B2C customers' },
-  { label: 'Books',      path: '/books',      icon: I.book,   hint: 'Catalog & pricing' },
-  { label: 'Book Sets',  path: '/book-sets',  icon: I.layers, hint: 'Sets per class' },
+  { label: 'Publishers',     path: '/publishers',    icon: I.bldg,   hint: 'Add before books' },
+  { label: 'Suppliers',      path: '/suppliers',     icon: I.truck,  hint: 'Stock suppliers' },
+  { label: 'Vendors',        path: '/vendors',       icon: I.store,  hint: 'Retail vendors' },
+  { label: 'Schools',        path: '/schools',       icon: I.cap,    hint: 'B2C customers' },
+  { label: 'Books',          path: '/books',         icon: I.book,   hint: 'Catalog & pricing' },
+  { label: 'Book Sets',      path: '/book-sets',     icon: I.layers, hint: 'Sets per class' },
+  { label: 'Shop Settings',  path: '/shop-settings', icon: I.gear,   hint: 'GSTIN & invoice info' },
 ]
 
 function NavItem({ item }) {
@@ -88,49 +91,53 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Main nav */}
-      <nav className="flex-1 px-3 pt-4 pb-2 space-y-0.5">
+      {/* Scrollable nav — operations + setup together */}
+      <div className="flex-1 overflow-y-auto px-3 pt-4 pb-5">
+
         <p className="px-3 text-[9px] font-bold uppercase tracking-widest text-slate-600 mb-2">Operations</p>
-        {main.map(item => <NavItem key={item.path} item={item} />)}
-      </nav>
+        <nav className="space-y-0.5 mb-4">
+          {main.map(item => <NavItem key={item.path} item={item} />)}
+        </nav>
 
-      {/* Setup section */}
-      <div className="px-3 pb-5 border-t border-white/5 pt-3">
-        <button
-          onClick={() => setSetupOpen(o => !o)}
-          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-150
-            ${inSetup ? 'text-slate-300 bg-white/5' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}`}
-        >
-          <div className="flex items-center gap-2">
-            {I.gear}
-            <span className="text-[10px] font-bold uppercase tracking-widest">Setup</span>
-          </div>
-          {I.chevron(setupOpen)}
-        </button>
+        {/* Setup section */}
+        <div className="border-t border-white/5 pt-3">
+          <button
+            onClick={() => setSetupOpen(o => !o)}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-150
+              ${inSetup ? 'text-slate-300 bg-white/5' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}`}
+          >
+            <div className="flex items-center gap-2">
+              {I.gear}
+              <span className="text-[10px] font-bold uppercase tracking-widest">Setup</span>
+            </div>
+            {I.chevron(setupOpen)}
+          </button>
 
-        {(setupOpen || inSetup) && (
-          <div className="mt-1 space-y-0.5 animate-slide-down">
-            {setup.map(({ path, label, icon, hint }) => (
-              <NavLink
-                key={path}
-                to={path}
-                className={({ isActive }) =>
-                  `flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-100
-                   ${isActive
-                     ? 'bg-white/10 text-white'
-                     : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
-                   }`
-                }
-              >
-                <span className="opacity-60 shrink-0">{icon}</span>
-                <div className="min-w-0">
-                  <p className="text-[12px] font-medium leading-tight">{label}</p>
-                  {hint && <p className="text-[10px] leading-tight mt-0.5 opacity-40">{hint}</p>}
-                </div>
-              </NavLink>
-            ))}
-          </div>
-        )}
+          {(setupOpen || inSetup) && (
+            <div className="mt-1 space-y-0.5 animate-slide-down">
+              {setup.map(({ path, label, icon, hint }) => (
+                <NavLink
+                  key={path}
+                  to={path}
+                  className={({ isActive }) =>
+                    `flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-100
+                     ${isActive
+                       ? 'bg-white/10 text-white'
+                       : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+                     }`
+                  }
+                >
+                  <span className="opacity-60 shrink-0">{icon}</span>
+                  <div className="min-w-0">
+                    <p className="text-[12px] font-medium leading-tight">{label}</p>
+                    {hint && <p className="text-[10px] leading-tight mt-0.5 opacity-40">{hint}</p>}
+                  </div>
+                </NavLink>
+              ))}
+            </div>
+          )}
+        </div>
+
       </div>
 
     </aside>

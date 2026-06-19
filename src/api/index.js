@@ -37,11 +37,25 @@ export const publishers = {
   delete: (id) => api.delete(`/publishers/${id}`),
 }
 
+export const companies = {
+  getAll: () => api.get('/companies'),
+  create: (d) => api.post('/companies', d),
+  update: (id, d) => api.put(`/companies/${id}`, d),
+  delete: (id) => api.delete(`/companies/${id}`),
+}
+
 export const suppliers = {
   getAll: () => api.get('/suppliers'),
   create: (d) => api.post('/suppliers', d),
   update: (id, d) => api.put(`/suppliers/${id}`, d),
   delete: (id) => api.delete(`/suppliers/${id}`),
+}
+
+export const vendors = {
+  getAll: () => api.get('/vendors'),
+  create: (d) => api.post('/vendors', d),
+  update: (id, d) => api.put(`/vendors/${id}`, d),
+  delete: (id) => api.delete(`/vendors/${id}`),
 }
 
 export const books = {
@@ -68,12 +82,6 @@ export const inventory = {
   bulkUpdateJson: (items) => api.post('/inventory/bulk-update-json', { items }),
 }
 
-export const vendors = {
-  getAll: () => api.get('/vendors'),
-  create: (d) => api.post('/vendors', d),
-  update: (id, d) => api.put(`/vendors/${id}`, d),
-  delete: (id) => api.delete(`/vendors/${id}`),
-}
 
 export const schools = {
   getAll: () => api.get('/schools'),
@@ -120,6 +128,46 @@ export const reconciliation = {
   getAll: () => api.get('/reconciliation'),
   getSummary: (date) => api.get(`/reconciliation/summary${date ? `?date=${date}` : ''}`),
   create: (d) => api.post('/reconciliation', d),
+}
+
+export const invoices = {
+  getAll: () => api.get('/invoices'),
+  getById: (id) => api.get(`/invoices/${id}`),
+  generate: (d) => api.post('/invoices/generate', d),
+  delete: (id) => api.delete(`/invoices/${id}`),
+}
+
+export const shopSettings = {
+  get: () => api.get('/shop-settings'),
+  update: (d) => api.put('/shop-settings', d),
+}
+
+export const eodUpload = {
+  upload: (file) => {
+    const form = new FormData()
+    form.append('file', file)
+    return api.post('/eod-upload', form)
+  },
+  templateUrl: '/api/eod-upload/template',
+}
+
+// ── Portal (End User) ──────────────────────────────────────────
+const portalToken = () => localStorage.getItem('portalToken')
+
+const portalApi = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/api' })
+portalApi.interceptors.request.use(config => {
+  const t = portalToken()
+  if (t) config.headers.Authorization = `Bearer ${t}`
+  return config
+})
+
+export const portal = {
+  register:    (d) => portalApi.post('/portal/register', d),
+  login:       (d) => portalApi.post('/portal/login', d),
+  getBookSets: (params) => portalApi.get('/portal/book-sets', { params }),
+  getBookSet:  (id) => portalApi.get(`/portal/book-sets/${id}`),
+  placeOrder:  (d) => portalApi.post('/portal/orders', d),
+  getMyOrders: () => portalApi.get('/portal/orders'),
 }
 
 export default api

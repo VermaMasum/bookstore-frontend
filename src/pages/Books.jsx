@@ -8,7 +8,10 @@ import Modal from '../components/ui/Modal'
 import Pagination from '../components/ui/Pagination'
 import useConfirm from '../hooks/useConfirm'
 
-const empty = { title: '', isbn: '', author: '', publisherId: '', category: '', mrp: '', costPrice: '' }
+const BOARDS = ['ICSE', 'CBSE', 'State Board']
+const LEVELS = ['SSC', 'HSC']
+
+const empty = { title: '', isbn: '', author: '', publisherId: '', category: '', board: '', level: '', costPrice: '' }
 
 export default function Books() {
   const { data, loading, reload } = useFetch(api.getAll)
@@ -30,8 +33,21 @@ export default function Books() {
   const fileRef = useRef(null)
 
   const downloadTemplate = () => {
-    const csv = 'title,publisher_name,mrp,cost_price,isbn,author,category\n'
-    const blob = new Blob([csv], { type: 'text/csv' })
+    const rows = [
+      'title,publisher_name,cost_price,isbn,author,category,board,level',
+      'English Reader Class 1,NCERT,85.00,,NCERT,Textbook,CBSE,SSC',
+      'Mathematics Class 1,NCERT,80.00,,NCERT,Textbook,CBSE,SSC',
+      'Environmental Studies Class 1,NCERT,75.00,,NCERT,Textbook,CBSE,SSC',
+      'Hindi Rimjhim Class 1,NCERT,75.00,,NCERT,Textbook,CBSE,SSC',
+      'Mathematics Class 6,S. Chand,140.00,,R.S. Aggarwal,Textbook,ICSE,SSC',
+      'Science Class 6,S. Chand,135.00,,Lakhmir Singh,Textbook,ICSE,SSC',
+      'Physics Part 1 Class 11,NCERT,175.00,,NCERT,Textbook,CBSE,HSC',
+      'Chemistry Part 1 Class 11,NCERT,170.00,,NCERT,Textbook,CBSE,HSC',
+      'Mathematics Class 12,NCERT,190.00,,NCERT,Textbook,CBSE,HSC',
+      'Physics Class 11,Saraswati,185.00,,Saraswati,Textbook,State Board,HSC',
+      '--- board = ICSE / CBSE / State Board | level = SSC / HSC | isbn optional ---,,,,,,,',
+    ]
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url; a.download = 'books_template.csv'; a.click()
@@ -63,7 +79,7 @@ export default function Books() {
   const openCreate = () => { setSelected(null); setForm(empty); setModal(true) }
   const openEdit = (r) => {
     setSelected(r)
-    setForm({ title: r.title, isbn: r.isbn || '', author: r.author || '', publisherId: r.publisherId, category: r.category || '', mrp: r.mrp, costPrice: r.costPrice })
+    setForm({ title: r.title, isbn: r.isbn || '', author: r.author || '', publisherId: r.publisherId, category: r.category || '', board: r.board || '', level: r.level || '', costPrice: r.costPrice })
     setModal(true)
   }
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
@@ -105,7 +121,7 @@ export default function Books() {
         <table className="w-full text-sm">
           <thead className="table-head">
             <tr>
-              {['Title', 'Author', 'Publisher', 'Category', 'MRP', 'Cost'].map(h => (
+              {['Title', 'Author', 'Publisher', 'Category', 'Board', 'Level', 'Cost Price', 'Added On'].map(h => (
                 <th key={h} className="px-4 py-3.5 text-left">{h}</th>
               ))}
               <th className="px-4 py-3.5 text-left">
@@ -121,8 +137,8 @@ export default function Books() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
-            {loading ? <tr><td colSpan={8} className="text-center py-8 text-slate-400">Loading...</td></tr>
-              : paginated.length === 0 ? <tr><td colSpan={8} className="text-center py-8 text-slate-400">{search ? 'No results' : 'No books yet'}</td></tr>
+            {loading ? <tr><td colSpan={10} className="text-center py-8 text-slate-400">Loading...</td></tr>
+              : paginated.length === 0 ? <tr><td colSpan={10} className="text-center py-8 text-slate-400">{search ? 'No results' : 'No books yet'}</td></tr>
                 : paginated.map(r => (
                   <tr key={r.id} className="table-row">
                     <td className="px-4 py-3.5 font-medium text-slate-800 max-w-[200px]">
@@ -134,8 +150,14 @@ export default function Books() {
                     <td className="px-4 py-3.5">
                       {r.category ? <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-xs">{r.category}</span> : ''}
                     </td>
-                    <td className="px-4 py-3.5 font-medium">{r.mrp}</td>
-                    <td className="px-4 py-3.5 text-slate-500">{r.costPrice}</td>
+                    <td className="px-4 py-3.5">
+                      {r.board ? <span className="bg-purple-50 text-purple-700 px-2 py-0.5 rounded text-xs">{r.board}</span> : ''}
+                    </td>
+                    <td className="px-4 py-3.5">
+                      {r.level ? <span className="bg-orange-50 text-orange-700 px-2 py-0.5 rounded text-xs">{r.level}</span> : ''}
+                    </td>
+                    <td className="px-4 py-3.5 font-medium">{r.costPrice}</td>
+                    <td className="px-4 py-3.5 text-slate-400 text-xs">{new Date(r.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                     <td className="px-4 py-3.5">
                       {(() => {
                         const qty = r.inventory?.quantity ?? 0
@@ -174,11 +196,19 @@ export default function Books() {
                 <option value="">Select publisher</option>
                 {pubs.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select></div>
+            <div><label className="label">Cost Price *</label>
+              <input required type="number" step="0.01" value={form.costPrice} onChange={set('costPrice')} className="input" /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><label className="label">MRP  *</label>
-                <input required type="number" step="0.01" value={form.mrp} onChange={set('mrp')} className="input" /></div>
-              <div><label className="label">Cost Price  *</label>
-                <input required type="number" step="0.01" value={form.costPrice} onChange={set('costPrice')} className="input" /></div>
+              <div><label className="label">Board</label>
+                <select value={form.board} onChange={set('board')} className="input">
+                  <option value="">Select board</option>
+                  {BOARDS.map(b => <option key={b} value={b}>{b}</option>)}
+                </select></div>
+              <div><label className="label">Level</label>
+                <select value={form.level} onChange={set('level')} className="input">
+                  <option value="">Select level</option>
+                  {LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
+                </select></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div><label className="label">Author</label>
