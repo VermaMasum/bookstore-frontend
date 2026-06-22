@@ -45,7 +45,7 @@ export default function SchoolOrders() {
         bookId: String(si.bookId),
         bookTitle: si.book?.title || '',
         qtyOrdered: String(si.quantity),
-        unitPrice: String(si.book?.mrp || ''),
+        unitPrice: String(si.book?.costPrice || ''),
       })))
     }
   }
