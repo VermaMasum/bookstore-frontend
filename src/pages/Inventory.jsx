@@ -105,14 +105,15 @@ export default function Inventory() {
   const openAdjust = (r) => { setSelected(r); setValue(r.quantity); setAdjType('absolute'); setModal(true) }
 
   const exportCSV = () => {
-    const header = 'book_id,title,isbn,publisher,category,mrp,stock'
+    const header = 'book_id,title,isbn,publisher,category,board,level,stock'
     const rows = data.map(i => [
       i.bookId,
       `"${(i.book.title || '').replace(/"/g, '""')}"`,
       i.book.isbn || '',
       `"${(i.book.publisher?.name || '').replace(/"/g, '""')}"`,
       i.book.category || '',
-      i.book.mrp,
+      i.book.board || '',
+      i.book.level || '',
       i.quantity,
     ].join(','))
     const csv = [header, ...rows].join('\n')
@@ -206,7 +207,7 @@ export default function Inventory() {
         </div>
         <table className="w-full text-sm">
           <thead className="table-head">
-            <tr>{['Book', 'Publisher', 'Category', 'MRP', 'Stock', 'Last Updated', 'Action'].map(h => <th key={h} className="px-4 py-3.5 text-left">{h}</th>)}</tr>
+            <tr>{['Book', 'Publisher', 'Category', 'Board', 'Level', 'Stock', 'Last Updated', 'Action'].map(h => <th key={h} className="px-4 py-3.5 text-left">{h}</th>)}</tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {loading ? <tr><td colSpan={7} className="text-center py-10 text-slate-400">Loading</td></tr>
@@ -216,7 +217,8 @@ export default function Inventory() {
                     <td className="px-4 py-3.5 font-semibold text-slate-800">{r.book.title}</td>
                     <td className="px-4 py-3.5 text-slate-400 text-xs">{r.book.publisher?.name || ''}</td>
                     <td className="px-4 py-3.5 text-slate-400 text-xs">{r.book.category || ''}</td>
-                    <td className="px-4 py-3.5 text-slate-600">{r.book.mrp}</td>
+                    <td className="px-4 py-3.5 text-slate-400 text-xs">{r.book.board || ''}</td>
+                    <td className="px-4 py-3.5 text-slate-400 text-xs">{r.book.level || ''}</td>
                     <td className="px-4 py-3.5">
                       {countMode ? (
                         <input
