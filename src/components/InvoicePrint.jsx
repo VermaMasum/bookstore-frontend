@@ -53,7 +53,7 @@ function buildPrintHTML(inv) {
     <div style="text-align:right;">
       <div style="font-size:15px;font-weight:800;border:1.5px solid #222;padding:4px 12px;display:inline-block;margin-bottom:8px;">TAX INVOICE / CASH MEMO</div>
       <div><strong>Invoice No:</strong> ${inv.invoiceNumber}</div>
-      <div><strong>Date:</strong> ${fmtDate(inv.invoiceDate)}</div>
+      <div><strong>Date:</strong> ${fmtDate(inv.createdAt)}</div>
       <div><strong>Type:</strong> ${inv.orderType === 'B2B' ? 'B2B — Vendor' : 'B2C — School'}</div>
     </div>
   </div>

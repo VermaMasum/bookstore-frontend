@@ -5,7 +5,7 @@ import { portal } from '../../api'
 const CLASSES = ['Nursery', 'LKG', 'UKG', 'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5',
   'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12']
 const BOARDS = ['ICSE', 'CBSE', 'State Board']
-const LEVELS = ['SSC', 'HSC']
+const LEVELS = ['Nursery', 'LKG', 'UKG', 'Primary (1–5)', 'Middle (6–8)', 'SSC (9–10)', 'HSC (11–12)', 'Other']
 const currentYear = new Date().getFullYear()
 const SESSIONS = Array.from({ length: 4 }, (_, i) => {
   const y = currentYear - 1 + i

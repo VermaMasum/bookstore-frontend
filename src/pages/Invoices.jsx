@@ -61,7 +61,7 @@ export default function Invoices() {
                 : filtered.map(inv => (
                   <tr key={inv.id} className="table-row">
                     <td className="px-4 py-3.5 font-mono text-sm font-semibold text-indigo-600">{inv.invoiceNumber}</td>
-                    <td className="px-4 py-3.5 text-slate-500">{new Date(inv.invoiceDate).toLocaleDateString('en-IN')}</td>
+                    <td className="px-4 py-3.5 text-slate-500">{new Date(inv.createdAt).toLocaleDateString('en-IN')}</td>
                     <td className="px-4 py-3.5"><Badge value={inv.orderType} /></td>
                     <td className="px-4 py-3.5 font-medium text-slate-800">{inv.buyerName}</td>
                     <td className="px-4 py-3.5 text-slate-500">{inv.items?.length} item(s)</td>
